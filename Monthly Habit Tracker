@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Habit Grove — Timeline & Life Donuts</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #fefcf0;
+      --panel: #eaf7df;
+      --panel-dark: #d4e8c2;
+      --accent: #6c4fd9;
+      --accent-soft: #e2d9ff;
+      --text: #3b5822;
+      --white: #ffffff;
+      --border: #b8da9e;
+      --shadow-sm: 0 8px 20px rgba(0, 0, 0, 0.03), 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    body {
+      background: var(--bg);
+      min-height: 100vh;
+      padding: 24px 20px;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', 'Georgia', serif;
+      color: var(--text);
+    }
+
+    @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap');
+
+    .app {
+      max-width: 1500px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.2fr 0.9fr;
+      gap: 28px;
+    }
+
+    .left-panel, .right-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--panel);
+      border-radius: 32px;
+      border: 1px solid var(--border);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .header {
+      background: linear-gradient(115deg, #eef5e4 0%, #e2f0d4 100%);
+    }
+
+    .month-picker {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      background: #ffffffaa;
+      padding: 8px 16px;
+      border-radius: 60px;
+    }
+
+    .month-nav-btn {
+      background: var(--accent-soft);
+      border: none;
+      font-size: 1.3rem;
+      cursor: pointer;
+      border-radius: 40px;
+      width: 38px;
+      height: 38px;
+      transition: 0.1s;
+      color: var(--accent);
+      font-weight: bold;
+    }
+
+    .month-nav-btn:hover {
+      background: #cdbbff;
+    }
+
+    .current-month-label {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .date {
+      text-align: center;
+      background: var(--white);
+      padding: 12px 6px;
+      border-radius: 60px;
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin: 6px 0 8px;
+    }
+
+    .overall-progress {
+      width: 100%;
+      height: 32px;
+      background: #ffffffc2;
+      border-radius: 60px;
+      overflow: hidden;
+      margin-top: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .overall-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(92deg, #a78eff, #7b5be6);
+      transition: width 0.3s ease;
+      border-radius: 60px;
+    }
+
+    .sections {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .section {
+      background: rgba(255, 255, 255, 0.55);
+      border-radius: 28px;
+      overflow: hidden;
+      border: 1px solid rgba(184, 218, 158, 0.5);
+    }
+
+    .section-header {
+      background: var(--panel-dark);
+      padding: 14px 8px;
+      text-align: center;
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .tree-area {
+      height: 90px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: #fafbe9;
+    }
+
+    .tree {
+      font-size: 3rem;
+      transition: transform 0.2s;
+    }
+
+    .tasks {
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .task {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: rgba(255, 255, 245, 0.7);
+      padding: 10px 14px;
+      border-radius: 60px;
+      border: 1px solid #d0e6b6;
+    }
+
+    .task span {
+      flex: 1;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .overview-title {
+      text-align: center;
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      color: #416b21;
+    }
+
+    .stats-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 250, 0.85);
+      border-radius: 28px;
+      padding: 18px 16px;
+    }
+
+    .stat-card h3 {
+      color: var(--accent);
+      font-size: 1.1rem;
+      margin-bottom: 14px;
+      font-weight: 700;
+      border-left: 5px solid var(--accent);
+      padding-left: 12px;
+    }
+
+    .habit-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .habit-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+      font-weight: 500;
+      padding: 8px 12px;
+      background: #ffffffcc;
+      border-radius: 60px;
+    }
+
+    .badge-empty {
+      text-align: center;
+      font-style: italic;
+      opacity: 0.7;
+      padding: 12px;
+      font-size: 0.85rem;
+    }
+
+    /* life areas donut grid */
+    .donuts-life {
+      display: flex;
+      justify-content: space-around;
+      gap: 18px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .donut-life-card {
+      text-align: center;
+      flex: 1;
+      min-width: 90px;
+    }
+
+    .donut-life {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      margin: 0 auto 10px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: conic-gradient(#e2d9ff 0deg, #eae2c0 0deg);
+    }
+
+    .donut-life::before {
+      content: '';
+      position: absolute;
+      width: 55px;
+      height: 55px;
+      background: var(--panel);
+      border-radius: 50%;
+    }
+
+    .donut-life span {
+      position: relative;
+      z-index: 1;
+      font-weight: 800;
+      font-size: 0.9rem;
+      color: var(--accent);
+    }
+
+    .donut-life-label {
+      font-weight: 600;
+      color: #416b21;
+      margin-top: 6px;
+      text-transform: capitalize;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 10px;
+      max-height: 500px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .calendar-cell {
+      background: #fffff2;
+      border-radius: 20px;
+      padding: 10px 6px;
+      min-height: 120px;
+      border: 1px solid #cae2b0;
+      cursor: pointer;
+      transition: 0.1s;
+    }
+
+    .calendar-cell.today {
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
+      background: #fff6df;
+    }
+
+    .cell-date {
+      font-weight: 800;
+      font-size: 0.9rem;
+      background: #e7f0db;
+      display: inline-block;
+      width: 32px;
+      border-radius: 30px;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .donut-mini {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      margin: 0 auto 4px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: conic-gradient(#cbbfff 0deg, #ede6c0 0deg);
+    }
+
+    .donut-mini::before {
+      content: '';
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      background: #ffffe8;
+      border-radius: 50%;
+    }
+
+    .donut-mini span {
+      position: relative;
+      font-size: 0.75rem;
+      font-weight: bold;
+      color: var(--accent);
+    }
+
+    .section-badge {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 6px;
+      font-size: 0.6rem;
+      gap: 4px;
+    }
+
+    .section-badge div {
+      background: #eef3e4;
+      border-radius: 20px;
+      padding: 3px 0;
+      text-align: center;
+      flex: 1;
+    }
+
+    .expand-detail {
+      display: none;
+      margin-top: 10px;
+      background: #edf5e2;
+      border-radius: 18px;
+      padding: 8px;
+      font-size: 0.7rem;
+      flex-wrap: wrap;
+    }
+
+    .calendar-cell.active-detail .expand-detail {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .habit-tag {
+      background: white;
+      padding: 3px 8px;
+      border-radius: 30px;
+      margin: 2px;
+      display: inline-block;
+      font-size: 0.7rem;
+    }
+
+    .click-hint {
+      text-align: center;
+      font-size: 0.55rem;
+      opacity: 0.55;
+      margin-top: 8px;
+    }
+
+    @media (max-width: 1000px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+      .sections {
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      }
+      .calendar-grid {
+        grid-template-columns: repeat(5, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="left-panel">
+    <div class="card header">
+      <div class="month-picker">
+        <button class="month-nav-btn" id="prevMonthBtn">◀</button>
+        <span class="current-month-label" id="overviewMonthLabel"></span>
+        <button class="month-nav-btn" id="nextMonthBtn">▶</button>
+      </div>
+      <div class="date" id="dateDisplay"></div>
+      <div class="overall-progress">
+        <div class="overall-progress-fill" id="overallProgress"></div>
+      </div>
+    </div>
+    <div class="sections" id="sectionsContainer"></div>
+  </div>
+
+  <div class="right-panel">
+    <div class="card">
+      <div class="overview-title">🌿 insights</div>
+      <div class="stats-grid" id="statsContainer"></div>
+    </div>
+
+    <div class="card">
+      <div class="overview-title">📅 monthly view</div>
+      <div class="calendar-grid" id="calendarGrid"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---------- CORE DATA ----------
+  const sections = {
+    Morning: ['Morning Prayer', 'Daily Text', 'Bible Reading', 'Shower', 'Vitamins'],
+    Midday: ['Exercise', 'Protein', 'Fruits & Nuts', 'Fiber'],
+    Night: ['Skincare', 'Floss & Brush', 'Evening Prayer', 'STAR']
+  };
+
+  const nonDailyHabits = ['Meeting Preparation', 'Meeting Participation', 'Personal Study'];
+  function isNonDailyRequiredToday(date) {
+    const dow = date.getDay();
+    return (dow === 1 || dow === 0); // Monday or Sunday
+  }
+
+  // life areas (only for donut summaries)
+  const lifeAreas = {
+    spiritual: ['Morning Prayer', 'Evening Prayer', 'STAR', 'Daily Text', 'Bible Reading', 'Meeting Preparation', 'Meeting Participation', 'Personal Study'],
+    physical: ['Fruits & Nuts', 'Fiber', 'Exercise', 'Protein'],
+    hygiene: ['Shower', 'Vitamins', 'Skincare', 'Floss & Brush']
+  };
+
+  const treeStages = ['🌱', '🌿', '🪴', '🌳'];
+  const today = new Date();
+  
+  // ----- current displayed month (for monthly stats & calendar) -----
+  let currentDisplayYear = today.getFullYear();
+  let currentDisplayMonth = today.getMonth(); // 0-indexed
+
+  function getDateKey(date) {
+    return date.toISOString().split('T')[0];
+  }
+
+  // ----- STORAGE -----
+  function loadData() {
+    const stored = localStorage.getItem('habitTrackerTimeline');
+    return stored ? JSON.parse(stored) : {};
+  }
+
+  function saveData(data) {
+    localStorage.setItem('habitTrackerTimeline', JSON.stringify(data));
+  }
+
+  // ensure full structure for any day (used on init and on the fly)
+  function ensureDayStructure(data, dateKey) {
+    const dateObj = new Date(dateKey);
+    if (isNaN(dateObj)) return data;
+    if (!data[dateKey]) data[dateKey] = {};
+    // daily sections
+    Object.keys(sections).forEach(section => {
+      if (!data[dateKey][section]) data[dateKey][section] = {};
+      sections[section].forEach(task => {
+        if (data[dateKey][section][task] === undefined) data[dateKey][section][task] = false;
+      });
+    });
+    // non-daily for days where it's required (or already exists)
+    const required = isNonDailyRequiredToday(dateObj);
+    if (required || data[dateKey]?.NonDaily) {
+      if (!data[dateKey].NonDaily) data[dateKey].NonDaily = {};
+      nonDailyHabits.forEach(habit => {
+        if (data[dateKey].NonDaily[habit] === undefined) data[dateKey].NonDaily[habit] = false;
+      });
+    }
+    return data;
+  }
+
+  function ensureAllExisting(data) {
+    // ensure for today
+    data = ensureDayStructure(data, getDateKey(today));
+    // also ensure for any other date that appears in storage keys
+    Object.keys(data).forEach(key => {
+      data = ensureDayStructure(data, key);
+    });
+    saveData(data);
+    return data;
+  }
+
+  // get all tasks for a given day
+  function getAllTasksForDay(data, dateKey) {
+    const tasks = [];
+    const dayData = data[dateKey] || {};
+    Object.entries(sections).forEach(([section, taskList]) => {
+      const secData = dayData[section] || {};
+      taskList.forEach(task => {
+        tasks.push({ name: task, completed: secData[task] || false, category: section });
+      });
+    });
+    const dateObj = new Date(dateKey);
+    const required = isNonDailyRequiredToday(dateObj);
+    const nonDailySec = dayData.NonDaily || {};
+    if (required || Object.keys(nonDailySec).length > 0) {
+      nonDailyHabits.forEach(habit => {
+        tasks.push({ name: habit, completed: nonDailySec[habit] || false, category: 'NonDaily' });
+      });
+    }
+    return tasks;
+  }
+
+  // ---------- RENDER TODAY'S LEFT PANEL (daily habits) ----------
+  function renderDailySections() {
+    const container = document.getElementById('sectionsContainer');
+    container.innerHTML = '';
+    const data = loadData();
+    const todayKey = getDateKey(today);
+    const todayData = data[todayKey] || {};
+
+    Object.entries(sections).forEach(([sectionName, tasks]) => {
+      const secObj = todayData[sectionName] || {};
+      let completed = 0;
+      tasks.forEach(t => { if (secObj[t]) completed++; });
+      const ratio = tasks.length ? completed / tasks.length : 0;
+      let stage = ratio >= 1 ? 3 : ratio >= 0.66 ? 2 : ratio >= 0.33 ? 1 : 0;
+
+      const sectionDiv = document.createElement('div');
+      sectionDiv.className = 'section';
+      sectionDiv.innerHTML = `
+        <div class="section-header">${sectionName}</div>
+        <div class="tree-area">
+          <div class="tree" style="transform: scale(${0.9 + ratio * 0.2})">${treeStages[stage]}</div>
+        </div>
+        <div class="tasks">
+          ${tasks.map(task => `
+            <label class="task">
+              <span>${task}</span>
+              <input type="checkbox" data-section="${sectionName}" data-task="${task}" ${secObj[task] ? 'checked' : ''}>
+            </label>
+          `).join('')}
+        </div>
+      `;
+      container.appendChild(sectionDiv);
+    });
+
+    // Non-daily section
+    const showNonDaily = isNonDailyRequiredToday(today);
+    const nonDailyData = todayData.NonDaily || {};
+    if (showNonDaily || Object.keys(nonDailyData).length > 0) {
+      const nonDiv = document.createElement('div');
+      nonDiv.className = 'section';
+      let completedNon = 0;
+      nonDailyHabits.forEach(h => { if (nonDailyData[h]) completedNon++; });
+      const ratioNon = nonDailyHabits.length ? completedNon / nonDailyHabits.length : 0;
+      let stageNon = ratioNon >= 1 ? 3 : ratioNon >= 0.66 ? 2 : ratioNon >= 0.33 ? 1 : 0;
+      nonDiv.innerHTML = `
+        <div class="section-header">✨ Weekly (Mon & Sun)</div>
+        <div class="tree-area">
+          <div class="tree" style="transform: scale(${0.9 + ratioNon * 0.2})">${treeStages[stageNon]}</div>
+        </div>
+        <div class="tasks">
+          ${nonDailyHabits.map(habit => `
+            <label class="task">
+              <span>${habit} ${!isNonDailyRequiredToday(today) ? '(not required today)' : ''}</span>
+              <input type="checkbox" data-section="NonDaily" data-task="${habit}" ${nonDailyData[habit] ? 'checked' : ''} ${!isNonDailyRequiredToday(today) ? 'disabled style="opacity:0.5;"' : ''}>
+            </label>
+          `).join('')}
+          ${!isNonDailyRequiredToday(today) ? '<div style="font-size:0.7rem;text-align:center;">⏳ appears on Monday & Sunday</div>' : ''}
+        </div>
+      `;
+      container.appendChild(nonDiv);
+    }
+
+    attachDailyEvents();
+    updateTodayProgress();
+  }
+
+  function attachDailyEvents() {
+    document.querySelectorAll('#sectionsContainer input[type="checkbox"]').forEach(cb => {
+      cb.removeEventListener('change', handleDailyCheck);
+      cb.addEventListener('change', handleDailyCheck);
+    });
+  }
+
+  function handleDailyCheck(e) {
+    const section = e.target.dataset.section;
+    const task = e.target.dataset.task;
+    const data = loadData();
+    const todayKey = getDateKey(today);
+    if (!data[todayKey]) data[todayKey] = {};
+    if (!data[todayKey][section]) data[todayKey][section] = {};
+    data[todayKey][section][task] = e.target.checked;
+    saveData(data);
+    renderDailySections();
+    updateDisplayedMonth(); // refresh calendar & stats for current month view
+  }
+
+  function updateTodayProgress() {
+    const data = loadData();
+    const todayKey = getDateKey(today);
+    const tasks = getAllTasksForDay(data, todayKey);
+    const done = tasks.filter(t => t.completed).length;
+    const total = tasks.length;
+    const percent = total ? Math.round((done / total) * 100) : 0;
+    document.getElementById('overallProgress').style.width = `${percent}%`;
+    document.getElementById('dateDisplay').innerHTML = today.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' });
+  }
+
+  // ---------- MONTHLY STATS (top 3 most/least + life donuts) for given year/month ----------
+  function computeMonthlyRankingsForMonth(year, month) {
+    const data = loadData();
+    const habitCount = new Map();
+    const habitTotal = new Map();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateObj = new Date(year, month, d);
+      const key = getDateKey(dateObj);
+      const dayTasks = getAllTasksForDay(data, key);
+      dayTasks.forEach(({ name, completed }) => {
+        if (!habitTotal.has(name)) habitTotal.set(name, 0);
+        habitTotal.set(name, habitTotal.get(name) + 1);
+        if (completed) {
+          if (!habitCount.has(name)) habitCount.set(name, 0);
+          habitCount.set(name, habitCount.get(name) + 1);
+        }
+      });
+    }
+    const rates = [];
+    for (let [habit, total] of habitTotal.entries()) {
+      const completed = habitCount.get(habit) || 0;
+      const rate = total === 0 ? 0 : (completed / total);
+      rates.push({ habit, rate });
+    }
+    const sortedHigh = [...rates].sort((a, b) => b.rate - a.rate);
+    const mostCompleted = sortedHigh.slice(0, 3).map(r => r.habit);
+    const mostNeglected = [...rates].sort((a, b) => a.rate - b.rate).slice(0, 3).map(r => r.habit);
+    return { mostCompleted, mostNeglected };
+  }
+
+  function computeLifeAreasDonuts(year, month) {
+    const data = loadData();
+    const areaStats = {
+      spiritual: { total: 0, completed: 0 },
+      physical: { total: 0, completed: 0 },
+      hygiene: { total: 0, completed: 0 }
+    };
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateObj = new Date(year, month, d);
+      const key = getDateKey(dateObj);
+      const dayTasks = getAllTasksForDay(data, key);
+      dayTasks.forEach(({ name, completed }) => {
+        for (const [area, habits] of Object.entries(lifeAreas)) {
+          if (habits.includes(name)) {
+            areaStats[area].total++;
+            if (completed) areaStats[area].completed++;
+            break;
+          }
+        }
+      });
+    }
+    const result = {};
+    for (const area of Object.keys(areaStats)) {
+      const total = areaStats[area].total;
+      const completed = areaStats[area].completed;
+      result[area] = total === 0 ? 0 : Math.round((completed / total) * 100);
+    }
+    return result;
+  }
+
+  async function renderMonthlyInsights() {
+    const { mostCompleted, mostNeglected } = computeMonthlyRankingsForMonth(currentDisplayYear, currentDisplayMonth);
+    const lifePercentages = computeLifeAreasDonuts(currentDisplayYear, currentDisplayMonth);
+    const statsContainer = document.getElementById('statsContainer');
+    statsContainer.innerHTML = `
+      <div class="stat-card">
+        <h3>🏆 Most consistent (month)</h3>
+        <div class="habit-list">
+          ${mostCompleted.length ? mostCompleted.map(h => `<div class="habit-item"><span class="habit-name">${h}</span></div>`).join('') : '<div class="badge-empty">✨ keep building</div>'}
+        </div>
+      </div>
+      <div class="stat-card">
+        <h3>🌱 Most neglected (month)</h3>
+        <div class="habit-list">
+          ${mostNeglected.filter(h => h).length ? mostNeglected.map(h => `<div class="habit-item"><span class="habit-name">${h}</span></div>`).join('') : '<div class="badge-empty">🌟 amazing consistency!</div>'}
+        </div>
+      </div>
+      <div class="stat-card">
+        <h3>🌸 Life areas · monthly donut</h3>
+        <div class="donuts-life">
+          ${Object.entries(lifePercentages).map(([area, pct]) => `
+            <div class="donut-life-card">
+              <div class="donut-life" style="background: conic-gradient(#b285ff ${pct * 3.6}deg, #e5f0d6 0deg);">
+                <span>${pct}%</span>
+              </div>
+              <div class="donut-life-label">${area}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  // ---------- CALENDAR VIEW (based on currentDisplayMonth) ----------
+  function renderCalendarForMonth() {
+    const grid = document.getElementById('calendarGrid');
+    grid.innerHTML = '';
+    const data = loadData();
+    const year = currentDisplayYear;
+    const month = currentDisplayMonth;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const todayKey = getDateKey(today);
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateObj = new Date(year, month, day);
+      const key = getDateKey(dateObj);
+      const isToday = (key === todayKey);
+      const dayTasks = getAllTasksForDay(data, key);
+
+      const sectionCompletion = { Morning: { total: 0, done: 0 }, Midday: { total: 0, done: 0 }, Night: { total: 0, done: 0 } };
+      dayTasks.forEach(t => {
+        if (sections[t.category]) {
+          sectionCompletion[t.category].total++;
+          if (t.completed) sectionCompletion[t.category].done++;
+        }
+      });
+      const getPercent = (sec) => sec.total ? Math.round((sec.done / sec.total) * 100) : 0;
+      const morningPct = getPercent(sectionCompletion.Morning);
+      const middayPct = getPercent(sectionCompletion.Midday);
+      const nightPct = getPercent(sectionCompletion.Night);
+
+      const cell = document.createElement('div');
+      cell.className = `calendar-cell ${isToday ? 'today' : ''}`;
+      cell.setAttribute('data-daykey', key);
+      cell.innerHTML = `
+        <div style="text-align:center;"><span class="cell-date">${day}</span></div>
+        <div style="display:flex; gap:8px; justify-content:center; margin:6px 0;">
+          ${renderMiniDonut(morningPct, '🌅')}
+          ${renderMiniDonut(middayPct, '☀️')}
+          ${renderMiniDonut(nightPct, '🌙')}
+        </div>
+        <div class="section-badge">
+          <div>🌅</div><div>☀️</div><div>🌙</div>
+        </div>
+        <div class="expand-detail" id="detail-${key}"></div>
+        <div class="click-hint">👆 tap details</div>
+      `;
+      cell.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const wasActive = cell.classList.contains('active-detail');
+        document.querySelectorAll('.calendar-cell.active-detail').forEach(c => c.classList.remove('active-detail'));
+        if (!wasActive) {
+          cell.classList.add('active-detail');
+          loadDetailInside(cell, key, dayTasks);
+        }
+      });
+      grid.appendChild(cell);
+    }
+  }
+
+  function renderMiniDonut(percent, icon) {
+    const angle = percent * 3.6;
+    return `<div class="donut-mini" style="background: conic-gradient(#b285ff ${angle}deg, #e2eccf 0deg);"><span>${icon}</span></div>`;
+  }
+
+  function loadDetailInside(cell, dateKey, dayTasks) {
+    const detailDiv = cell.querySelector('.expand-detail');
+    if (!detailDiv) return;
+    const completedList = dayTasks.filter(t => t.completed).map(t => t.name);
+    const pendingList = dayTasks.filter(t => !t.completed).map(t => t.name);
+    detailDiv.innerHTML = `
+      <div style="font-weight:bold;">✅ Done (${completedList.length})</div>
+      <div>${completedList.length ? completedList.map(h => `<span class="habit-tag">✓ ${h}</span>`).join('') : '—'}</div>
+      <div style="font-weight:bold; margin-top:6px;">⏳ Left</div>
+      <div>${pendingList.length ? pendingList.map(h => `<span class="habit-tag">○ ${h}</span>`).join('') : '🎉 all done!'}</div>
+    `;
+  }
+
+  // ----- MONTH NAVIGATION & global refresh -----
+  function updateDisplayedMonth() {
+    document.getElementById('overviewMonthLabel').innerText = new Date(currentDisplayYear, currentDisplayMonth, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    renderMonthlyInsights();
+    renderCalendarForMonth();
+  }
+
+  function changeMonth(delta) {
+    let newMonth = currentDisplayMonth + delta;
+    let newYear = currentDisplayYear;
+    if (newMonth < 0) {
+      newMonth = 11;
+      newYear--;
+    } else if (newMonth > 11) {
+      newMonth = 0;
+      newYear++;
+    }
+    currentDisplayYear = newYear;
+    currentDisplayMonth = newMonth;
+    updateDisplayedMonth();
+  }
+
+  // initial data integrity + daily rendering
+  function init() {
+    let data = loadData();
+    data = ensureAllExisting(data);
+    saveData(data);
+    renderDailySections();
+    updateDisplayedMonth();
+    // set month label and today date
+    document.getElementById('overviewMonthLabel').innerText = new Date(currentDisplayYear, currentDisplayMonth, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    document.getElementById('dateDisplay').innerHTML = today.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' });
+  }
+
+  document.getElementById('prevMonthBtn').addEventListener('click', () => changeMonth(-1));
+  document.getElementById('nextMonthBtn').addEventListener('click', () => changeMonth(1));
+  window.addEventListener('storage', () => init());
+  init();
+</script>
+</body>
+</html>
